@@ -46,7 +46,7 @@ export const mappedTitleAlternate: IMappedTypes<ITitleAlternate> = {
     ],
     declaration: {
         titleId: imdbIdParser,
-        ordering: parseInt,
+        ordering: intParser,
         title: asIs,
         region: orNullParser(regionParser),
         language: orNullParser(languageParser),
