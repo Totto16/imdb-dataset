@@ -36,7 +36,7 @@ export interface ITitleAlternate {
     language: LanguageString | null
     types: AlternativeType[]
     attributes: string[]
-    isOriginalTitle: boolean
+    isOriginalTitle: boolean | null
 }
 
 export enum Genre {
@@ -95,9 +95,9 @@ export interface ITitleBasic {
     primaryTitle: string
     originalTitle: string
     isAdult: boolean
-    startYear: Int
+    startYear: Int| null
     endYear: Int | null
-    runtimeMinutes: Int
+    runtimeMinutes: Int | null
     genres: Genre[]
 }
 
@@ -128,7 +128,7 @@ export interface ITitlePrincipal {
 export interface INameBasic {
     nconst: NameID
     primaryName: string
-    birthYear: Int
+    birthYear: Int | null
     deathYear: Int | null
     primaryProfession: string[]
     knownForTitles: ImdbID[]

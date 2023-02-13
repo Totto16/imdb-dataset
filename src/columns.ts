@@ -1,17 +1,17 @@
 import {
-    imdbIdParser,
-    floatParser,
-    intParser,
+    alternativeTitleParser,
+    arrayParser,
     asIs,
+    booleanParser,
+    floatParser,
+    genreParser,
+    imdbIdParser,
+    intParser,
+    languageParser,
+    nameIDParser,
     orNullParser,
     regionParser,
-    languageParser,
-    arrayParser,
-    alternativeTitleParser,
-    booleanParser,
     titleTypeParser,
-    genreParser,
-    nameIDParser,
 } from "./internalParser"
 import {
     IMappedTypes,
@@ -52,7 +52,7 @@ export const mappedTitleAlternate: IMappedTypes<ITitleAlternate> = {
         language: orNullParser(languageParser),
         types: arrayParser(alternativeTitleParser),
         attributes: arrayParser(asIs),
-        isOriginalTitle: booleanParser,
+        isOriginalTitle: orNullParser(booleanParser),
     },
 }
 
@@ -74,9 +74,9 @@ export const mappedTitleBasic: IMappedTypes<ITitleBasic> = {
         primaryTitle: asIs,
         originalTitle: asIs,
         isAdult: booleanParser,
-        startYear: intParser,
+        startYear: orNullParser(intParser),
         endYear: orNullParser(intParser),
-        runtimeMinutes: intParser,
+        runtimeMinutes: orNullParser(intParser),
         genres: arrayParser(genreParser),
     },
 }
@@ -124,7 +124,7 @@ export const mappedNameBasic: IMappedTypes<INameBasic> = {
     declaration: {
         nconst: nameIDParser,
         primaryName: asIs,
-        birthYear: intParser,
+        birthYear: orNullParser(intParser),
         deathYear: orNullParser(intParser),
         primaryProfession: arrayParser(asIs),
         knownForTitles: arrayParser(imdbIdParser),
@@ -137,7 +137,7 @@ export type ImdbDataType =
     | "title.basics"
     | "title.crew"
     | "title.episode"
-    | "title.pricipals"
+    | "title.principals"
     | "title.ratings"
 
 export type DataTypeToInterface = {
@@ -146,7 +146,7 @@ export type DataTypeToInterface = {
     "title.basics": ITitleBasic
     "title.crew": ITitleCrew
     "title.episode": ITitleEpisode
-    "title.pricipals": ITitlePrincipal
+    "title.principals": ITitlePrincipal
     "title.ratings": ITitleRating
 }
 
@@ -160,7 +160,6 @@ export type AvailableInterfaces =
     | ITitlePrincipal
     | ITitleRating
 
-
 export type DataTypeMap = {
     [key in ImdbDataType]: IMappedTypes<DataTypeToInterface[key]>
 }
@@ -171,6 +170,6 @@ export const dataTypeMap: DataTypeMap = {
     "title.basics": mappedTitleBasic,
     "title.crew": mappedTitleCrew,
     "title.episode": mappedTitleEpisode,
-    "title.pricipals": mappedTitlePrincipal,
+    "title.principals": mappedTitlePrincipal,
     "title.ratings": mappedTitleRating,
 }

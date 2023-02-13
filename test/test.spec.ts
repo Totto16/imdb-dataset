@@ -1,22 +1,6 @@
 import assert from "assert"
 
-import {
-    INameBasic,
-    ITitleAlternate,
-    ITitleBasic,
-    ITitleCrew,
-    ITitleEpisode,
-    ITitlePrincipal,
-    ITitleRating,
-    mappedNameBasic,
-    mappedTitleAlternate,
-    mappedTitleBasic,
-    mappedTitleCrew,
-    mappedTitleEpisode,
-    mappedTitlePrincipal,
-    mappedTitleRating,
-    TSVParser,
-} from "../src"
+import { TSVParser } from "../src"
 
 function getFilePath(path: string): string {
     return `${__dirname}/files/${path}`
@@ -140,7 +124,7 @@ describe("imdb dataset", () => {
     it("should parse the principal dataset", async () => {
         const parser = new TSVParser({
             filePath: getFilePath("title.pricipals.tsv"),
-            type: "title.pricipals",
+            type: "title.principals",
         })
 
         let i = 0

@@ -1,14 +1,14 @@
 import {
-    ImdbID,
-    Float,
-    Int,
-    RegionString,
-    LanguageString,
-    Parser,
     AlternativeType,
-    TitleType,
+    Float,
     Genre,
+    ImdbID,
+    Int,
+    LanguageString,
     NameID,
+    Parser,
+    RegionString,
+    TitleType,
 } from "./types"
 
 export const nulledValues = ["\\N"]
@@ -40,11 +40,19 @@ export function booleanParser(str: string): boolean {
 }
 
 export function floatParser(str: string): Float {
-    return parseFloat(str)
+    const float = parseFloat(str)
+    if (isNaN(float)) {
+        throw new Error(`Couldn't parse float of '${str}'`)
+    }
+    return float
 }
 
 export function intParser(str: string): Int {
-    return parseInt(str)
+    const int = parseInt(str)
+    if (isNaN(int)) {
+        throw new Error(`Couldn't parse int of '${str}'`)
+    }
+    return int
 }
 
 export function regionParser(str: string): RegionString {

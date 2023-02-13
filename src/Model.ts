@@ -1,6 +1,6 @@
-import { getCols } from "./util"
-import { IMappedTypes } from "./types"
 import { AvailableInterfaces } from "./columns"
+import { IMappedTypes } from "./types"
+import { getCols } from "./util"
 
 export class Model<T extends AvailableInterfaces> {
     private readonly _mappedType: IMappedTypes<T>
@@ -29,11 +29,18 @@ export class Model<T extends AvailableInterfaces> {
                 throw new Error(
                     `Error in parsing ${columnName as string}: ${
                         (e as Error).message
-                    }`
+                    }
+        ${order.join("\t")}
+        ${line}`
                 )
             }
         }
 
         return parsedLine as T
+    }
+
+    public isHead(line: string): boolean {
+        const headLineString = this._mappedType.order.join("\t")
+        return headLineString === line
     }
 }

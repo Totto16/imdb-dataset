@@ -1,10 +1,10 @@
 import { default as es, MapStream } from "event-stream"
 import { createReadStream, existsSync } from "fs"
 
-import { sleep } from "./util"
+import { dataTypeMap, DataTypeToInterface, ImdbDataType } from "./columns"
 import { Model } from "./Model"
 import { IMappedTypes } from "./types"
-import { dataTypeMap, DataTypeToInterface, ImdbDataType } from "./columns"
+import { sleep } from "./util"
 
 export enum IteratorState {
     NA,
@@ -15,7 +15,11 @@ export enum IteratorState {
 export interface ITSVParserOptions<T extends keyof DataTypeToInterface> {
     type: T
     filePath: string
+    hasHead?: boolean
+    maxLines?: number
 }
+
+type OmitHeadTYpe = "auto" | boolean
 
 export class TSVParser<T extends ImdbDataType>
     implements AsyncIterable<DataTypeToInterface[T]>
@@ -24,17 +28,28 @@ export class TSVParser<T extends ImdbDataType>
     private lines: DataTypeToInterface[T][] = []
     private maxLines = 100
     private state: IteratorState = IteratorState.NA
+    private lineCount = 0
+    private omitHead: OmitHeadTYpe = "auto"
 
     private model: Model<DataTypeToInterface[T]>
 
     constructor(options: ITSVParserOptions<T>) {
-        const { filePath, type } = options
+        const { filePath, type, hasHead, maxLines } = options
+        if (hasHead !== undefined) {
+            this.omitHead = hasHead
+        }
+
+        if (maxLines !== undefined) {
+            this.maxLines = maxLines
+        }
 
         if (!existsSync(filePath)) {
             throw new Error(`Cannot find file at path: ${filePath}`)
         }
 
-        this.model = new Model<DataTypeToInterface[T]>(dataTypeMap[type] as IMappedTypes<DataTypeToInterface[T]>)
+        this.model = new Model<DataTypeToInterface[T]>(
+            dataTypeMap[type] as IMappedTypes<DataTypeToInterface[T]>
+        )
 
         this.state = IteratorState.WORKING
 
@@ -48,6 +63,17 @@ export class TSVParser<T extends ImdbDataType>
 
     private onLine = es.mapSync((line: string) => {
         if (!line) {
+            return
+        }
+
+        ++this.lineCount
+
+        if (this.lineCount === 1 && this.omitHead !== false) {
+            if (this.omitHead === "auto") {
+                if (this.model.isHead(line)) {
+                    return
+                }
+            }
             return
         }
 
@@ -99,6 +125,7 @@ export class TSVParser<T extends ImdbDataType>
                 return
             }
             await sleep(5)
+            //await new Promise((resolve) => this.stream.once("data", resolve))
         }
     }
 
@@ -110,5 +137,9 @@ export class TSVParser<T extends ImdbDataType>
         DataTypeToInterface[T]
     > {
         return this
+    }
+
+    public getLineCount(): number {
+        return this.lineCount
     }
 }
