@@ -156,7 +156,6 @@ export type AvailableInterfaces =
     | ITitleBasic
     | ITitleCrew
     | ITitleEpisode
-    | ITitleEpisode
     | ITitlePrincipal
     | ITitleRating
 
