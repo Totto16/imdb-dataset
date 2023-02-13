@@ -12,14 +12,12 @@ This library works only with .tsv files, it will read the file line by line and 
 Usage:
 ```javascript
 import {
-  ITitleRating,
-  mappedTitleBasic,
   TSVParser,
 } from 'imdb-dataset';
 
-const parser = new TSVParser<ITitleRating>({
-  filePath: '<absolute-file-path>.tsv',
-  columns: mappedTitleBasic,
+const parser = new TSVParser({
+  type:'title.basics',
+  filePath: './title.basics.tsv',
 });
 
 async function test() {
