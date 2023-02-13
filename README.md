@@ -7,21 +7,22 @@ This library works only with .tsv files, it will read the file line by line and 
 
 [List with parsers](src/columns.ts)
 
-[List with parsers](test/test.spec.ts)
+[List with tests](test/test.spec.ts)
 
 Usage:
-```javascript
+```typescript
 import {
   TSVParser,
 } from 'imdb-dataset';
 
 const parser = new TSVParser({
-  type:'title.basics',
-  filePath: './title.basics.tsv',
+  type:'title.ratings',
+  filePath: './title.ratings.tsv',
 });
 
 async function test() {
   for await (const rating of parser) {
+    // rating is automatically of type ITitleRating
     console.log(rating);
   }
 }
