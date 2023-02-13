@@ -1,145 +1,177 @@
-import assert from 'assert';
+import assert from "assert"
 
 import {
-  INameBasic,
-  ITitleAlternate,
-  ITitleBasic,
-  ITitleCrew,
-  ITitleEpisode,
-  ITitlePrincipal,
-  ITitleRating,
-  mappedNameBasic,
-  mappedTitleAlternate,
-  mappedTitleBasic,
-  mappedTitleCrew,
-  mappedTitleEpisode,
-  mappedTitlePrincipal,
-  mappedTitleRating,
-  TSVParser,
-} from '../src';
+    INameBasic,
+    ITitleAlternate,
+    ITitleBasic,
+    ITitleCrew,
+    ITitleEpisode,
+    ITitlePrincipal,
+    ITitleRating,
+    mappedNameBasic,
+    mappedTitleAlternate,
+    mappedTitleBasic,
+    mappedTitleCrew,
+    mappedTitleEpisode,
+    mappedTitlePrincipal,
+    mappedTitleRating,
+    TSVParser,
+} from "../src"
 
 function getFilePath(path: string): string {
-  return `${__dirname}/files/${path}`;
+    return `${__dirname}/files/${path}`
 }
 
-describe('imdb dataset', () => {
+function isImdbId(str: string): boolean {
+    return /tt(\d){7}/.test(str)
+}
 
-  const lines = 8;
+function isUndefinedOrNull(something: any): boolean {
+    return something === null || something === undefined
+}
 
-  it('should parse the ratings dataset', async () => {
-    const parser = new TSVParser<ITitleRating>({
-      filePath: getFilePath('title.ratings.tsv'),
-      columns: mappedTitleRating,
-    });
+describe("imdb dataset", () => {
+    const lines = 8
 
-    let i = 0;
-    for await (const rating of parser) {
-      assert(rating.tconst);
-      assert(rating.averageRating);
-      assert(rating.numVotes);
-      i++;
-    }
+    it("should parse the ratings dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("title.ratings.tsv"),
+            type: "title.ratings",
+        })
 
-    assert.strictEqual(lines, i);
-  });
+        let i = 0
+        for await (const rating of parser) {
+            assert(rating.tconst)
+            assert(rating.averageRating)
+            assert(rating.numVotes)
 
-  it('should parse the basics dataset', async () => {
-    const parser = new TSVParser<ITitleBasic>({
-      filePath: getFilePath('title.basics.tsv'),
-      columns: mappedTitleBasic,
-    });
+            assert.strictEqual(typeof rating.tconst, "string")
+            assert(isImdbId(rating.tconst))
+            assert.strictEqual(typeof rating.averageRating, "number")
+            assert.strictEqual(typeof rating.numVotes, "number")
+            assert(Number.isInteger(rating.numVotes))
+            i++
+        }
 
-    let i = 0;
-    for await (const basic of parser) {
-      assert(basic.tconst);
-      assert(basic.titleType);
-      assert(basic.primaryTitle);
-      assert(basic.originalTitle);
-      i++;
-    }
+        assert.strictEqual(lines, i)
+    })
 
-    assert.strictEqual(lines, i);
-  });
+    it("should parse the basics dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("title.basics.tsv"),
+            type: "title.basics",
+        })
 
-  it('should parse the akas dataset', async () => {
-    const parser = new TSVParser<ITitleAlternate>({
-      filePath: getFilePath('title.akas.tsv'),
-      columns: mappedTitleAlternate,
-    });
+        let i = 0
+        for await (const basic of parser) {
+            assert(basic.tconst)
+            assert(basic.titleType)
+            assert(basic.primaryTitle)
+            assert(basic.originalTitle)
+            assert(!isUndefinedOrNull(basic.isAdult))
+            assert(basic.startYear)
+            assert(basic.endYear !== undefined)
+            assert(basic.runtimeMinutes !== undefined)
+            assert(basic.genres)
 
-    let i = 0;
-    for await (const alternate of parser) {
-      assert(alternate.titleId);
-      assert(alternate.ordering);
-      i++;
-    }
+            assert.strictEqual(typeof basic.tconst, "string")
+            assert(isImdbId(basic.tconst))
+            //TODO better tests here
 
-    assert.strictEqual(lines, i);
-  });
+            i++
+        }
 
-  it('should parse the crew dataset', async () => {
-    const parser = new TSVParser<ITitleCrew>({
-      filePath: getFilePath('title.crew.tsv'),
-      columns: mappedTitleCrew,
-    });
+        assert.strictEqual(lines, i)
+    })
 
-    let i = 0;
-    for await (const crew of parser) {
-      assert(crew.tconst);
-      i++;
-    }
+    it("should parse the akas dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("title.akas.tsv"),
+            type: "title.akas",
+        })
 
-    assert.strictEqual(lines, i);
-  });
+        let i = 0
+        for await (const alternate of parser) {
+            assert(alternate.titleId)
+            assert(alternate.ordering)
+            //TODO better tests here
 
-  it('should parse the episode dataset', async () => {
-    const parser = new TSVParser<ITitleEpisode>({
-      filePath: getFilePath('title.episode.tsv'),
-      columns: mappedTitleEpisode,
-    });
+            i++
+        }
 
-    let i = 0;
-    for await (const episode of parser) {
-      assert(episode.tconst);
-      assert(episode.parentTconst);
-      i++;
-    }
+        assert.strictEqual(lines, i)
+    })
 
-    assert.strictEqual(lines, i);
-  });
+    it("should parse the crew dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("title.crew.tsv"),
+            type: "title.crew",
+        })
 
-  it('should parse the principal dataset', async () => {
-    const parser = new TSVParser<ITitlePrincipal>({
-      filePath: getFilePath('title.pricipals.tsv'),
-      columns: mappedTitlePrincipal,
-    });
+        let i = 0
+        for await (const crew of parser) {
+            assert(crew.tconst)
+            //TODO better tests here
 
-    let i = 0;
-    for await (const principal of parser) {
-      assert(principal.tconst);
-      assert(principal.ordering);
-      assert(principal.nconst);
-      i++;
-    }
+            i++
+        }
 
-    assert.strictEqual(lines, i);
-  });
+        assert.strictEqual(lines, i)
+    })
 
-  it('should parse the name dataset', async () => {
-    const parser = new TSVParser<INameBasic>({
-      filePath: getFilePath('name.basics.tsv'),
-      columns: mappedNameBasic,
-    });
+    it("should parse the episode dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("title.episode.tsv"),
+            type: "title.episode",
+        })
 
-    let i = 0;
-    for await (const principal of parser) {
-      assert(principal.primaryName);
-      assert(principal.birthYear);
-      assert(principal.nconst);
-      i++;
-    }
+        let i = 0
+        for await (const episode of parser) {
+            assert(episode.tconst)
+            assert(episode.parentTconst)
+            //TODO better tests here
 
-    assert.strictEqual(lines, i);
-  });
+            i++
+        }
 
-});
+        assert.strictEqual(lines, i)
+    })
+
+    it("should parse the principal dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("title.pricipals.tsv"),
+            type: "title.pricipals",
+        })
+
+        let i = 0
+        for await (const principal of parser) {
+            assert(principal.tconst)
+            assert(principal.ordering)
+            assert(principal.nconst)
+            //TODO better tests here
+
+            i++
+        }
+
+        assert.strictEqual(lines, i)
+    })
+
+    it("should parse the name dataset", async () => {
+        const parser = new TSVParser({
+            filePath: getFilePath("name.basics.tsv"),
+            type: "name.basics",
+        })
+
+        let i = 0
+        for await (const principal of parser) {
+            assert(principal.primaryName)
+            assert(principal.birthYear)
+            assert(principal.nconst)
+            //TODO better tests here
+
+            i++
+        }
+
+        assert.strictEqual(lines, i)
+    })
+})

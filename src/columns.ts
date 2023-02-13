@@ -1,161 +1,176 @@
-import { IMappedTypes } from './types';
+import {
+    imdbIdParser,
+    floatParser,
+    intParser,
+    asIs,
+    orNullParser,
+    regionParser,
+    languageParser,
+    arrayParser,
+    alternativeTitleParser,
+    booleanParser,
+    titleTypeParser,
+    genreParser,
+    nameIDParser,
+} from "./internalParser"
+import {
+    IMappedTypes,
+    INameBasic,
+    ITitleAlternate,
+    ITitleBasic,
+    ITitleCrew,
+    ITitleEpisode,
+    ITitlePrincipal,
+    ITitleRating,
+} from "./types"
 
-function splitArray(value: string) {
-  return value.split(',');
+export const mappedTitleRating: IMappedTypes<ITitleRating> = {
+    order: ["tconst", "averageRating", "numVotes"],
+    declaration: {
+        tconst: imdbIdParser,
+        averageRating: floatParser,
+        numVotes: intParser,
+    },
 }
 
-export const mappedTitleRating: IMappedTypes[] = [
-  {
-    column: 'tconst',
-  },
-  {
-    column: 'averageRating',
-    parser: parseFloat,
-  },
-  {
-    column: 'numVotes',
-    parser: parseInt,
-  },
-];
+export const mappedTitleAlternate: IMappedTypes<ITitleAlternate> = {
+    order: [
+        "titleId",
+        "ordering",
+        "title",
+        "region",
+        "language",
+        "types",
+        "attributes",
+        "isOriginalTitle",
+    ],
+    declaration: {
+        titleId: imdbIdParser,
+        ordering: parseInt,
+        title: asIs,
+        region: orNullParser(regionParser),
+        language: orNullParser(languageParser),
+        types: arrayParser(alternativeTitleParser),
+        attributes: arrayParser(asIs),
+        isOriginalTitle: booleanParser,
+    },
+}
 
-export const mappedTitleAlternate: IMappedTypes[] = [
-  {
-    column: 'titleId',
-  },
-  {
-    column: 'ordering',
-    parser: parseInt,
-  },
-  {
-    column: 'title',
-  },
-  {
-    column: 'region',
-  },
-  {
-    column: 'language',
-  },
-  {
-    column: 'types',
-  },
-  {
-    column: 'attributes',
-  },
-  {
-    column: 'isOriginalTitle',
-    parser: Boolean,
-  },
-];
+export const mappedTitleBasic: IMappedTypes<ITitleBasic> = {
+    order: [
+        "tconst",
+        "titleType",
+        "primaryTitle",
+        "originalTitle",
+        "isAdult",
+        "startYear",
+        "endYear",
+        "runtimeMinutes",
+        "genres",
+    ],
+    declaration: {
+        tconst: imdbIdParser,
+        titleType: titleTypeParser,
+        primaryTitle: asIs,
+        originalTitle: asIs,
+        isAdult: booleanParser,
+        startYear: intParser,
+        endYear: orNullParser(intParser),
+        runtimeMinutes: intParser,
+        genres: arrayParser(genreParser),
+    },
+}
 
-export const mappedTitleBasic: IMappedTypes[] = [
-  {
-    column: 'tconst',
-  },
-  {
-    column: 'titleType',
-  },
-  {
-    column: 'primaryTitle',
-  },
-  {
-    column: 'originalTitle',
-  },
-  {
-    column: 'isAdult',
-    parser: Boolean,
-  },
-  {
-    column: 'startYear',
-    parser: parseInt,
-  },
-  {
-    column: 'endYear',
-    parser: parseInt,
-  },
-  {
-    column: 'runtimeMinutes',
-    parser: parseInt,
-  },
-  {
-    column: 'genres',
-    parser: splitArray,
-  },
-];
+export const mappedTitleCrew: IMappedTypes<ITitleCrew> = {
+    order: ["tconst", "directors", "writers"],
+    declaration: {
+        tconst: imdbIdParser,
+        directors: arrayParser(nameIDParser),
+        writers: arrayParser(nameIDParser),
+    },
+}
 
-export const mappedTitleCrew: IMappedTypes[] = [
-  {
-    column: 'tconst',
-  },
-  {
-    column: 'directors',
-    parser: splitArray,
-  },
-  {
-    column: 'writers',
-    parser: splitArray,
-  },
-];
+export const mappedTitleEpisode: IMappedTypes<ITitleEpisode> = {
+    order: ["tconst", "parentTconst", "seasonNumber", "episodeNumber"],
+    declaration: {
+        tconst: imdbIdParser,
+        parentTconst: asIs,
+        seasonNumber: orNullParser(intParser),
+        episodeNumber: orNullParser(intParser),
+    },
+}
 
-export const mappedTitleEpisode: IMappedTypes[] = [
-  {
-    column: 'tconst',
-  },
-  {
-    column: 'parentTconst',
-  },
-  {
-    column: 'seasonNumber',
-    parser: parseInt,
-  },
-  {
-    column: 'episodeNumber',
-    parser: parseInt,
-  },
-];
+export const mappedTitlePrincipal: IMappedTypes<ITitlePrincipal> = {
+    order: ["tconst", "ordering", "nconst", "category", "job", "characters"],
+    declaration: {
+        tconst: imdbIdParser,
+        ordering: intParser,
+        nconst: nameIDParser,
+        category: asIs,
+        job: orNullParser(asIs),
+        characters: orNullParser(asIs),
+    },
+}
 
-export const mappedTitlePrincipal: IMappedTypes[] = [
-  {
-    column: 'tconst',
-  },
-  {
-    column: 'ordering',
-    parser: parseInt,
-  },
-  {
-    column: 'nconst',
-  },
-  {
-    column: 'category',
-  },
-  {
-    column: 'job',
-  },
-  {
-    column: 'characters',
-  },
-];
+export const mappedNameBasic: IMappedTypes<INameBasic> = {
+    order: [
+        "nconst",
+        "primaryName",
+        "birthYear",
+        "deathYear",
+        "primaryProfession",
+        "knownForTitles",
+    ],
+    declaration: {
+        nconst: nameIDParser,
+        primaryName: asIs,
+        birthYear: intParser,
+        deathYear: orNullParser(intParser),
+        primaryProfession: arrayParser(asIs),
+        knownForTitles: arrayParser(imdbIdParser),
+    },
+}
 
-export const mappedNameBasic: IMappedTypes[] = [
-  {
-    column: 'nconst',
-  },
-  {
-    column: 'primaryName',
-  },
-  {
-    column: 'birthYear',
-    parser: parseInt,
-  },
-  {
-    column: 'deathYear',
-    parser: parseInt,
-  },
-  {
-    column: 'primaryProfession',
-    parser: splitArray,
-  },
-  {
-    column: 'knownForTitles',
-    parser: splitArray,
-  },
-];
+export type ImdbDataType =
+    | "name.basics"
+    | "title.akas"
+    | "title.basics"
+    | "title.crew"
+    | "title.episode"
+    | "title.pricipals"
+    | "title.ratings"
+
+export type DataTypeToInterface = {
+    "name.basics": INameBasic
+    "title.akas": ITitleAlternate
+    "title.basics": ITitleBasic
+    "title.crew": ITitleCrew
+    "title.episode": ITitleEpisode
+    "title.pricipals": ITitlePrincipal
+    "title.ratings": ITitleRating
+}
+
+export type AvailableInterfaces =
+    | INameBasic
+    | ITitleAlternate
+    | ITitleBasic
+    | ITitleCrew
+    | ITitleEpisode
+    | ITitleEpisode
+    | ITitlePrincipal
+    | ITitleRating
+
+
+export type DataTypeMap = {
+    [key in ImdbDataType]: IMappedTypes<DataTypeToInterface[key]>
+}
+
+export const dataTypeMap: DataTypeMap = {
+    "name.basics": mappedNameBasic,
+    "title.akas": mappedTitleAlternate,
+    "title.basics": mappedTitleBasic,
+    "title.crew": mappedTitleCrew,
+    "title.episode": mappedTitleEpisode,
+    "title.pricipals": mappedTitlePrincipal,
+    "title.ratings": mappedTitleRating,
+}

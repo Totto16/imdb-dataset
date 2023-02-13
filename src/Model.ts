@@ -1,38 +1,39 @@
-import { getCols } from './util';
-import { IMappedTypes } from './types';
+import { getCols } from "./util"
+import { IMappedTypes } from "./types"
+import { AvailableInterfaces } from "./columns"
 
-const nulledValues = ['\\N'];
+export class Model<T extends AvailableInterfaces> {
+    private readonly _mappedType: IMappedTypes<T>
 
-export class Model<T extends {}> {
+    constructor(mappedType: IMappedTypes<T>) {
+        this._mappedType = mappedType
+    }
 
-  private readonly _headerColumns: IMappedTypes[];
+    parseLine(line: string): T {
+        const cols = getCols(line)
 
-  constructor(headerColumns: IMappedTypes[]) {
-    this._headerColumns = headerColumns;
-  }
+        const parsedLine: Partial<T> = {}
+        const order = this._mappedType.order
+        if (order.length !== Object.keys(this._mappedType.declaration).length) {
+            throw new Error(
+                `The Map Definition is incorrect, oder and the keys of the declaration object have not the same length!`
+            )
+        }
+        for (let i = 0; i < order.length; ++i) {
+            const columnName = order[i]
+            const parserFn = this._mappedType.declaration[columnName]
+            try {
+                const value = (parsedLine[columnName] = parserFn(cols[i]))
+                parsedLine[columnName] = value
+            } catch (e) {
+                throw new Error(
+                    `Error in parsing ${columnName as string}: ${
+                        (e as Error).message
+                    }`
+                )
+            }
+        }
 
-  parseLine(line: string): T {
-    const cols = getCols(line);
-
-    const parsedLine: any = {};
-    this._headerColumns.forEach((columnParser, index) => {
-      const { column, parser } = columnParser;
-
-      const value = cols[index];
-      if (nulledValues.includes(value)) {
-        parsedLine[column] = null;
-        return;
-      }
-
-      if (parser) {
-        parsedLine[column] = parser(cols[index]);
-        return;
-      }
-
-      parsedLine[column] = value;
-    });
-
-    return parsedLine;
-  }
-
+        return parsedLine as T
+    }
 }

@@ -1,119 +1,114 @@
-import { default as es, MapStream } from 'event-stream';
-import { createReadStream, existsSync } from 'fs';
+import { default as es, MapStream } from "event-stream"
+import { createReadStream, existsSync } from "fs"
 
-import { sleep } from './util';
-import { Model } from './Model';
-import { IMappedTypes } from './types';
+import { sleep } from "./util"
+import { Model } from "./Model"
+import { IMappedTypes } from "./types"
+import { dataTypeMap, DataTypeToInterface, ImdbDataType } from "./columns"
 
 export enum IteratorState {
-  NA,
-  FINISHED,
-  WORKING,
+    NA,
+    FINISHED,
+    WORKING,
 }
 
-export interface ITSVParserOptions<T> {
-  model?: Model<T>;
-  columns?: IMappedTypes[];
-  filePath: string;
+export interface ITSVParserOptions<T extends keyof DataTypeToInterface> {
+    type: T
+    filePath: string
 }
 
-export class TSVParser<T> implements AsyncIterable<T> {
+export class TSVParser<T extends ImdbDataType>
+    implements AsyncIterable<DataTypeToInterface[T]>
+{
+    private stream: MapStream
+    private lines: DataTypeToInterface[T][] = []
+    private maxLines = 100
+    private state: IteratorState = IteratorState.NA
 
-  private stream: MapStream;
-  private lines: T[] = [];
-  private maxLines = 100;
-  private state: IteratorState = IteratorState.NA;
+    private model: Model<DataTypeToInterface[T]>
 
-  private model: Model<T>;
+    constructor(options: ITSVParserOptions<T>) {
+        const { filePath, type } = options
 
-  constructor(options: ITSVParserOptions<T>) {
-    const { filePath, model, columns } = options;
+        if (!existsSync(filePath)) {
+            throw new Error(`Cannot find file at path: ${filePath}`)
+        }
 
-    if (!existsSync(filePath)) {
-      throw new Error(`Cannot find file at path: ${filePath}`);
+        this.model = new Model<DataTypeToInterface[T]>(dataTypeMap[type] as IMappedTypes<DataTypeToInterface[T]>)
+
+        this.state = IteratorState.WORKING
+
+        this.stream = createReadStream(filePath)
+            .pipe(es.split())
+            .pipe(this.onLine)
+            .on("close", () => {
+                this.state = IteratorState.FINISHED
+            })
     }
 
-    if (!model) {
-      if (!columns) {
-        throw new Error('If a model is not specified please specify columns for standard model');
-      }
-      this.model = new Model<T>(columns);
-    } else {
-      this.model = model;
+    private onLine = es.mapSync((line: string) => {
+        if (!line) {
+            return
+        }
+
+        const parsedLine = this.model.parseLine(line)
+        this.lines.push(parsedLine)
+
+        if (this.lines.length === this.maxLines) {
+            this.stream.pause()
+        }
+    })
+
+    private getLine(): DataTypeToInterface[T] {
+        const line = this.lines.shift()
+        if (!line) {
+            throw new Error("Cannot get line")
+        }
+
+        return line
     }
 
-    this.state = IteratorState.WORKING;
-
-    this.stream = createReadStream(filePath)
-      .pipe(es.split())
-      .pipe(this.onLine)
-      .on('close', () => {
-        this.state = IteratorState.FINISHED;
-      });
-  }
-
-  private onLine = es.mapSync((line: string) => {
-    if (!line) {
-      return;
+    private isEmpty() {
+        return this.lines.length === 0
     }
 
-    const parsedLine = this.model.parseLine(line);
-    this.lines.push(parsedLine);
+    public async next(): Promise<IteratorResult<DataTypeToInterface[T]>> {
+        if (this.isEmpty()) {
+            this.stream.resume()
+            await this.waitForNewLines()
+        }
 
-    if (this.lines.length === this.maxLines) {
-      this.stream.pause();
-    }
-  });
+        return new Promise((resolve, reject) => {
+            if (this.finished) {
+                return resolve({
+                    value: null,
+                    done: true,
+                })
+            }
 
-  private getLine(): T {
-    const line = this.lines.shift();
-    if (!line) {
-      throw new Error('Cannot get line');
-    }
-
-    return line;
-  }
-
-  private isEmpty() {
-    return this.lines.length === 0;
-  }
-
-  public async next(): Promise<IteratorResult<T>> {
-    if (this.isEmpty()) {
-      this.stream.resume();
-      await this.waitForNewLines();
+            resolve({
+                value: this.getLine(),
+                done: false,
+            })
+        })
     }
 
-    return new Promise((resolve, reject) => {
-      if (this.finished) {
-        return resolve({
-          value: null,
-          done: true,
-        });
-      }
-
-      resolve({
-        value: this.getLine(),
-        done: false,
-      });
-    });
-  }
-
-  private async waitForNewLines(): Promise<void> {
-    while (this.lines.length === 0) {
-      if (this.finished) {
-        return;
-      }
-      await sleep(5);
+    private async waitForNewLines(): Promise<void> {
+        while (this.lines.length === 0) {
+            if (this.finished) {
+                return
+            }
+            await sleep(5)
+        }
     }
-  }
 
-  private get finished() {
-    return this.state === IteratorState.FINISHED && this.lines.length === 0;
-  }
+    private get finished() {
+        return this.state === IteratorState.FINISHED && this.lines.length === 0
+    }
 
-  public [Symbol.asyncIterator](): AsyncIterableIterator<any> { // tslint:disable-line
-    return this;
-  }
-
+    public [Symbol.asyncIterator](): AsyncIterableIterator<
+        DataTypeToInterface[T]
+    > {
+        return this
+    }
 }
