@@ -41,12 +41,12 @@ async function runGeneric(type: ImdbDataType) {
 
 async function start() {
     const types: ImdbDataType[] = [
-        "name.basics",
+       /*  "name.basics",
         "title.akas",
         "title.basics",
         "title.crew",
         "title.episode",
-        "title.principals",
+        "title.principals", */
         "title.ratings",
     ]
 

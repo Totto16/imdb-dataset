@@ -1,5 +1,5 @@
-import { default as es, MapStream } from "event-stream"
-import { createReadStream, existsSync } from "fs"
+import { createReadStream, existsSync, ReadStream } from "fs"
+import readline from "readline"
 
 import { dataTypeMap, DataTypeToInterface, ImdbDataType } from "./columns"
 import { Model } from "./Model"
@@ -24,7 +24,7 @@ type OmitHeadTYpe = "auto" | boolean
 export class TSVParser<T extends ImdbDataType>
     implements AsyncIterable<DataTypeToInterface[T]>
 {
-    private stream: MapStream
+    private stream: ReadStream
     private lines: DataTypeToInterface[T][] = []
     private maxLines = 100
     private state: IteratorState = IteratorState.NA
@@ -54,14 +54,16 @@ export class TSVParser<T extends ImdbDataType>
         this.state = IteratorState.WORKING
 
         this.stream = createReadStream(filePath)
-            .pipe(es.split())
-            .pipe(this.onLine)
-            .on("close", () => {
-                this.state = IteratorState.FINISHED
-            })
+
+        let rl = readline.createInterface({ input: this.stream })
+        rl.on("line", this.onLine)
+        rl.on("error", (error) => console.error(error))
+        rl.on("close", () => {
+            this.state = IteratorState.FINISHED
+        })
     }
 
-    private onLine = es.mapSync((line: string) => {
+    private onLine = (line: string) => {
         if (!line) {
             return
         }
@@ -83,7 +85,7 @@ export class TSVParser<T extends ImdbDataType>
         if (this.lines.length === this.maxLines) {
             this.stream.pause()
         }
-    })
+    }
 
     private getLine(): DataTypeToInterface[T] {
         const line = this.lines.shift()
