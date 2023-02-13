@@ -30,7 +30,7 @@ export type LanguageString = symbol
 
 export interface ITitleAlternate {
     titleId: ImdbID
-    ordering: number
+    ordering: Int
     title: string
     region: RegionString | null
     language: LanguageString | null
