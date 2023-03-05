@@ -71,7 +71,13 @@ export class TSVParser<T extends ImdbDataType>
 
         let rl = readline.createInterface({ input: this.stream })
         rl.on("line", this.onLine)
-        rl.on("error", (error) => console.error(error))
+        rl.on("error", (err: Error | any) => {
+            if (err instanceof Error) {
+                throw err
+            } else {
+                throw new Error(`Received error while reading: ${err}`)
+            }
+        })
         rl.on("close", () => {
             this.state = IteratorState.FINISHED
         })
