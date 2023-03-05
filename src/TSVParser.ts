@@ -19,6 +19,16 @@ export interface ITSVParserOptions<T extends keyof DataTypeToInterface> {
     maxLines?: number
 }
 
+const possibleValues: ImdbDataType[] = [
+    "name.basics",
+    "title.akas",
+    "title.basics",
+    "title.crew",
+    "title.episode",
+    "title.principals",
+    "title.ratings",
+]
+
 type OmitHeadTYpe = "auto" | boolean
 
 export class TSVParser<T extends ImdbDataType>
@@ -44,7 +54,11 @@ export class TSVParser<T extends ImdbDataType>
         }
 
         if (!existsSync(filePath)) {
-            throw new Error(`Cannot find file at path: ${filePath}`)
+            throw new Error(`Filepath was invalid: '${filePath}'`)
+        }
+
+        if (!possibleValues.includes(type)) {
+            throw new Error(`Not a valid type: '${type}'`)
         }
 
         this.model = new Model<DataTypeToInterface[T]>(
@@ -75,8 +89,9 @@ export class TSVParser<T extends ImdbDataType>
                 if (this.model.isHead(line)) {
                     return
                 }
+            } else {
+                return
             }
-            return
         }
 
         const parsedLine = this.model.parseLine(line)

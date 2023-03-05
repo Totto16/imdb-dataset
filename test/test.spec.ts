@@ -1,6 +1,10 @@
 import assert from "assert"
 
-import { TSVParser } from "../src"
+function fail(reason = "fail was called in a test."): never {
+    throw new Error(reason)
+}
+
+import { DataTypeToInterface, TSVParser } from "../src"
 
 function getFilePath(path: string): string {
     return `${__dirname}/files/${path}`
@@ -13,6 +17,40 @@ function isImdbId(str: string): boolean {
 function isUndefinedOrNull(something: any): boolean {
     return something === null || something === undefined
 }
+
+describe("wrong parameters", () => {
+    it("should return an error, when the type is wrong", async () => {
+        try {
+            const parser = new TSVParser({
+                filePath: getFilePath("title.ratings.tsv"),
+                type: "unknown" as keyof DataTypeToInterface,
+            })
+
+            fail("it should not reach here")
+        } catch (e) {
+            assert(e instanceof Error)
+            assert((e as Error).message == "Not a valid type: 'unknown'")
+        }
+    })
+
+    it("should return an error, when the filePath isn't present", async () => {
+        try {
+            const parser = new TSVParser({
+                type: "title.ratings",
+                filePath: getFilePath("s"),
+            })
+
+            fail("it should not reach here")
+        } catch (e) {
+            console.log((e as Error).message)
+            assert(e instanceof Error)
+            assert(
+                (e as Error).message ==
+                    `Filepath was invalid: '${getFilePath("s")}'`
+            )
+        }
+    })
+})
 
 describe("imdb dataset", () => {
     const lines = 8
@@ -37,6 +75,7 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 
@@ -65,6 +104,7 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 
@@ -83,6 +123,7 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 
@@ -100,6 +141,7 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 
@@ -118,12 +160,13 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 
     it("should parse the principal dataset", async () => {
         const parser = new TSVParser({
-            filePath: getFilePath("title.pricipals.tsv"),
+            filePath: getFilePath("title.principals.tsv"),
             type: "title.principals",
         })
 
@@ -137,6 +180,7 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 
@@ -156,6 +200,7 @@ describe("imdb dataset", () => {
             i++
         }
 
+        assert.strictEqual(lines, parser.getLineCount())
         assert.strictEqual(lines, i)
     })
 })
