@@ -42,7 +42,6 @@ describe("wrong parameters", () => {
 
             fail("it should not reach here")
         } catch (e) {
-            console.log((e as Error).message)
             assert(e instanceof Error)
             assert(
                 (e as Error).message ==
